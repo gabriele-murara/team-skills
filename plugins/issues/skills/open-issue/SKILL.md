@@ -9,6 +9,21 @@ disable-model-invocation: true
 
 Apri il lavoro sulla issue numero `$ARGUMENTS`.
 
+## Gestionale: solo lettura
+
+Sul gestionale (Redmine, GitHub, GitLab) l'agente può solo **leggere** le
+issue. Non deve **mai** modificarle, nemmeno se l'utente lo chiede:
+
+- niente creazione, modifica, chiusura, riapertura o eliminazione;
+- niente commenti, note, allegati, tempo speso;
+- niente cambi di stato, assegnatario, priorità, versione, etichette.
+
+Usa solo richieste di lettura: `curl` senza `-X` né dati (quindi `GET`),
+`gh issue view`, `gh issue list`. Mai `POST`, `PUT`, `PATCH`, `DELETE`, né
+comandi come `gh issue create`, `edit`, `comment`, `close`, `reopen`,
+`delete`. Se serve inserire un testo nel gestionale, scrivilo in un file
+in `issues/`: lo copia l'utente.
+
 ## 1. Controlli
 
 1. **Numero**: `$ARGUMENTS` deve essere un numero intero positivo

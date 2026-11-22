@@ -21,7 +21,7 @@ progetto, così vale per tutti):
 {
   "extraKnownMarketplaces": {
     "team-skills": {
-      "source": { "source": "github", "repo": "<owner>/<repo>" }
+      "source": { "source": "github", "repo": "gabriele-murara/team-skills" }
     }
   },
   "enabledPlugins": {
@@ -39,12 +39,16 @@ Abilita solo i plugin che servono al progetto (`laravel` solo nei
 progetti Laravel). All'apertura del progetto Claude Code chiede di
 fidarsi del marketplace e installa i plugin.
 
-In alternativa, a mano: `/plugin marketplace add <owner>/<repo>`, poi
+In alternativa, a mano: `/plugin marketplace add gabriele-murara/team-skills`, poi
 `/plugin install issues@team-skills`.
 
 Per aggiornare le skill: `/plugin marketplace update team-skills`.
 
 ## Configurazione del gestionale
+
+Le skill `issues` accedono al gestionale **solo in lettura**: non creano,
+modificano, commentano o chiudono mai le issue. I testi da inserire nel
+gestionale vengono scritti in `issues/` e li copia l'utente.
 
 `open-issue` legge la issue dal gestionale indicato da `ISSUE_TRACKER`.
 Se la variabile non è impostata, o mancano le credenziali, cerca il testo
@@ -78,3 +82,17 @@ plugins/<plugin>/skills/<skill>/SKILL.md
 Per aggiungere una skill: crea la sua cartella in `plugins/<plugin>/skills/`,
 aumenta `version` in `plugin.json` e nella voce di `marketplace.json`,
 poi verifica con `claude plugin validate .`.
+
+## Versioni
+
+Le versioni seguono il formato `major.minor.patch`:
+
+- **major**: modifiche incompatibili (ad esempio una skill rinominata o
+  rimossa, un argomento o una variabile d'ambiente cambiati);
+- **minor**: funzionalità nuove e compatibili (una skill nuova, un nuovo
+  gestionale supportato, metadati come la licenza);
+- **patch**: correzioni che non cambiano il comportamento previsto.
+
+La versione in `plugin.json` e quella nella voce del plugin in
+`marketplace.json` devono coincidere. Senza un aumento di versione chi ha
+già installato il plugin continua a usare la copia in cache.

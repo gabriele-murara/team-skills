@@ -11,13 +11,13 @@
       "name": "laravel",
       "source": "./plugins/laravel",
       "description": "Setup di un progetto Laravel 11/12 con regole di codifica, costanti, Logger e classi helper.",
-      "version": "1.0.0"
+      "version": "1.1.0"
     },
     {
       "name": "issues",
       "source": "./plugins/issues",
       "description": "Scrittura, apertura e chiusura delle issue con Redmine, GitHub o GitLab.",
-      "version": "1.0.0"
+      "version": "1.2.0"
     }
   ]
 }
