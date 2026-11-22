@@ -50,8 +50,8 @@ Le skill `issues` accedono al gestionale **solo in lettura**: non creano,
 modificano, commentano o chiudono mai le issue. I testi da inserire nel
 gestionale vengono scritti in `issues/` e li copia l'utente.
 
-`open-issue` legge la issue dal gestionale indicato da `ISSUE_TRACKER`.
-Se la variabile non è impostata, o mancano le credenziali, cerca il testo
+`open-issue` legge la issue dal gestionale indicato da `ISSUE_TRACKER`
+e ne salva una copia in `issues/issue-<n>.md`. Se la variabile non è impostata, o mancano le credenziali, cerca il testo
 in un file `*.md` o `*.pdf` della cartella `issues/` che ha il numero
 della issue nel nome.
 

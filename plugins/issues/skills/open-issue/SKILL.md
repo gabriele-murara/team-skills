@@ -1,6 +1,6 @@
 ---
 name: open-issue
-description: Apre il lavoro su una issue - crea e pubblica il branch issue-<numero> da un branch develop o develop-*, legge il testo della issue dal gestionale (Redmine, GitHub, GitLab) o dalla cartella issues e propone una soluzione.
+description: Apre il lavoro su una issue - crea e pubblica il branch issue-<numero> da un branch develop o develop-*, legge il testo della issue dal gestionale (Redmine, GitHub, GitLab), ne salva una copia in issues/issue-<numero>.md, oppure lo legge dalla cartella issues, e propone una soluzione.
 argument-hint: "<numero-issue>"
 disable-model-invocation: true
 ---
@@ -99,6 +99,8 @@ Non stampare mai i token né includerli nei messaggi all'utente.
 Se le credenziali mancano o la chiamata fallisce, dillo all'utente
 (senza mostrare i token) e passa al punto 3.2.
 
+Se la lettura riesce, salva il testo come descritto al punto 3.4.
+
 ### 3.2 Cartella `issues`
 
 Cerca in `issues/` (nella root del repository) i file `*.md` e `*.pdf`
@@ -114,6 +116,53 @@ Escludi `closed-issue-<numero>.md`, che è la nota di chiusura.
 
 Dillo all'utente e chiedigli di descrivere la issue o di indicare dove
 trovarla. Il branch resta creato.
+
+### 3.4 Copia locale della issue
+
+Quando il testo arriva dal gestionale, salvane una copia in
+`issues/issue-<numero>.md`, così resta consultabile anche senza
+gestionale e alle esecuzioni successive la trova il punto 3.2.
+
+1. Se mancano, crea la cartella `issues/` e il suo `.gitignore`
+   (contenuto: `*` e `!.gitignore`, uno per riga).
+2. Se `issues/issue-<numero>.md` esiste già con un contenuto diverso,
+   chiedi all'utente se sovrascriverlo: potrebbe contenere sue modifiche.
+3. Scrivi il file in CommonMark, in italiano, senza emoji, con questa
+   struttura (ometti le sezioni vuote):
+
+   ```markdown
+   # #<numero> <titolo>
+
+   - **Fonte:** <redmine|github|gitlab> - <URL web della issue>
+   - **Tipo:** <tracker o etichette>
+   - **Stato:** <stato>
+   - **Priorità:** <priorità>
+   - **Versione:** <fixed_version o milestone>
+   - **Scaricata il:** <data AAAA-MM-GG>
+
+   ## Descrizione
+
+   <descrizione o body, così com'è>
+
+   ## Allegati
+
+   - <nome file> - <URL>
+
+   ## Note
+
+   ### <autore> - <data>
+
+   <testo della nota o del commento>
+   ```
+
+   Riporta la descrizione e le note senza riassumerle né riscriverle.
+   Ometti le note vuote (ad esempio i journal di Redmine con soli cambi
+   di campo) e quelle di sistema di GitLab (`system: true`). Gli
+   allegati non vanno scaricati: basta l'elenco con i link. Non scrivere
+   mai token o chiavi nel file, nemmeno dentro gli URL.
+
+Se il file non si può scrivere, avvisa l'utente e prosegui: la copia
+locale è utile ma non bloccante.
 
 ## 4. Analisi e proposta
 
@@ -136,5 +185,6 @@ Con il testo della issue:
 Indica:
 
 - il branch creato, il branch di partenza e l'esito del push;
-- la fonte del testo della issue (gestionale o file);
+- la fonte del testo della issue (gestionale o file) e, se l'hai
+  salvata, il percorso della copia locale;
 - il riassunto, le eventuali domande e la soluzione proposta.
