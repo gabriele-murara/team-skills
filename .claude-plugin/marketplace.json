@@ -1,0 +1,23 @@
+{
+  "name": "team-skills",
+  "owner": {
+    "name": "Gabriele"
+  },
+  "metadata": {
+    "description": "Skill condivise per i progetti: setup Laravel e gestione delle issue (Redmine, GitHub, GitLab)."
+  },
+  "plugins": [
+    {
+      "name": "laravel",
+      "source": "./plugins/laravel",
+      "description": "Setup di un progetto Laravel 11/12 con regole di codifica, costanti, Logger e classi helper.",
+      "version": "1.0.0"
+    },
+    {
+      "name": "issues",
+      "source": "./plugins/issues",
+      "description": "Scrittura, apertura e chiusura delle issue con Redmine, GitHub o GitLab.",
+      "version": "1.0.0"
+    }
+  ]
+}

@@ -1,0 +1,248 @@
+---
+name: laravel-setup
+description: Sets up a Laravel project with the coding rules (CLAUDE.md), the constants file, the project Logger and the helper classes. Creates a new Laravel 12 project, or completes an existing Laravel 11/12 project by adding only the missing parts. Use it when the user asks to prepare, create, set up or align a Laravel project.
+argument-hint: "[project-path]"
+---
+
+# Laravel project setup
+
+Set up the Laravel project in `$ARGUMENTS` with the rules and the classes
+in this skill folder:
+
+- **new project**: the folder does not exist or is empty. Create a
+  Laravel 12 project, then set it up;
+- **existing project**: the folder contains a Laravel 11 or 12 project.
+  Add only the missing parts and do not touch the parts that already
+  meet the rules.
+
+Files of this skill (paths relative to this `SKILL.md`):
+
+| File | Use |
+|---|---|
+| `LARAVEL_CODING_RULES.md` | Becomes the `CLAUDE.md` of the project |
+| `bootstrap/constants.php` | `bootstrap/constants.php` (`APP_NAME`, `VERSION`) |
+| `logger/` | Logger class, facade, alias and `SETUP_LOGGER.md` |
+| `helpers/BaseModel.php` | `app/Models/BaseModel.php` |
+| `helpers/BaseModelWithActivityLog.php` | `app/Models/BaseModelWithActivityLog.php` |
+| `helpers/BulkInsert.php` | `app/Classes/BulkInsert.php` |
+
+Read `LARAVEL_CODING_RULES.md` before starting: its rules apply to this
+setup too. In particular: never run migrations, never commit, never
+write on the `main` branch, change only what is needed.
+
+---
+
+## 1. Mode and checks
+
+1. **Target folder**: `$ARGUMENTS`. If it is empty, ask the user for the
+   path of the project.
+   - The folder does not exist or is empty → **new project**.
+   - The folder contains `artisan` and `composer.json` requires
+     `laravel/framework` → **existing project**.
+   - Anything else → stop and ask the user.
+2. **Tools**: `php -v` (PHP >= 8.2), `composer -V`; for a new project
+   also `npm -v`. If one is missing, stop and tell the user.
+3. **SQLite driver**: `php -m | grep -i pdo_sqlite`. Required for a new
+   project (Laravel uses SQLite by default for database, sessions and
+   tests) and for an existing project that uses SQLite
+   (`DB_CONNECTION=sqlite` in `.env`, or SQLite in `phpunit.xml`). If the
+   extension is missing, stop and tell the user (e.g. `php8.x-sqlite3`
+   package on Debian/Ubuntu).
+
+Existing project only:
+
+4. **Laravel version**: read the installed version from `composer.lock`
+   (package `laravel/framework`) or with `php artisan --version`. Only
+   11.x and 12.x are supported: with any other version, stop and tell
+   the user. If `vendor/` is missing, ask the user to run
+   `composer install` first. Laravel 11 no longer receives security
+   fixes: recent Composer versions block its releases because of
+   security advisories, so do not run `composer update`, and if a
+   `composer require` fails for this reason, stop and tell the user (do
+   not disable the advisories policy). Mention it in the report.
+5. **Git**: if the folder is a git repository, check the branch
+   (`git branch --show-current`). On `main`, stop and ask the user to
+   switch branch. If there are uncommitted changes (`git status`), tell
+   the user and ask whether to proceed, so that the setup changes can be
+   reviewed apart.
+6. **Tests baseline**: run `php artisan test` and keep the result. It is
+   compared with the result after the setup (section 5): failures that
+   were already there are not caused by the setup.
+
+---
+
+## 2. Create the project (new project only)
+
+1. Create the project **without the Composer scripts**: the scripts of
+   `laravel/laravel` run `php artisan migrate`, which agents must never
+   run.
+
+   ```bash
+   composer create-project laravel/laravel:^12.0 <path> --no-scripts
+   ```
+
+2. In the project folder, run only the safe steps of those scripts:
+
+   ```bash
+   cp .env.example .env
+   php artisan key:generate
+   touch database/database.sqlite
+   ```
+
+3. `npm install` (needed by `composer dev`).
+4. Do not run `git init`: the user creates the repository.
+
+From here on, every command runs in the project folder. A new project is
+now an existing project where every component is missing: continue with
+section 3.
+
+---
+
+## 3. Analysis
+
+Check each component and give it a state:
+
+- **compliant**: it meets the rules → do not touch it;
+- **different**: it exists but differs from the rules → list the
+  differences;
+- **missing**: it does not exist → it will be added.
+
+| # | Component | Compliant when |
+|---|---|---|
+| A | `CLAUDE.md` | It exists and contains every section of `LARAVEL_CODING_RULES.md`, with the same rules |
+| B | Constants | `bootstrap/constants.php` defines `APP_NAME` and `VERSION`, and `bootstrap/app.php` loads it with `require_once` before `return Application::configure(...)` |
+| C | Logger | It meets section 1 of `logger/SETUP_LOGGER.md` (check as in its section 2.1) |
+| D | Base models | `App\Models\BaseModel` and `App\Models\BaseModelWithActivityLog` exist and behave as the files in `helpers/`, and `spatie/laravel-activitylog` is installed |
+| E | `BulkInsert` | `App\Classes\BulkInsert` exists and behaves as `helpers/BulkInsert.php` |
+| F | Test database | `phpunit.xml` sets `DB_CONNECTION=sqlite` and `DB_DATABASE=:memory:` (in Laravel 11 they are commented out by default) |
+
+Values needed for B:
+
+- `APP_NAME`: from `bootstrap/constants.php` if present, otherwise ask
+  the user (propose `APP_NAME` from `.env`, or the folder name);
+- `VERSION`: from `bootstrap/constants.php` if present, otherwise ask
+  the user (propose `version` from `composer.json` if present, or
+  `0.1.0`).
+
+**Existing project**: show the user the table with the state of each
+component and, for each **different** component, its differences. Ask
+which components to apply and how to handle the different ones. Do not
+change anything before the user answers.
+
+**New project**: every component is missing; ask only the values for B,
+then apply all of them.
+
+---
+
+## 4. Apply
+
+Apply only the **missing** components, and the **different** ones the
+user asked to change. Never rewrite a compliant component.
+
+### A. `CLAUDE.md`
+
+- Missing: copy `LARAVEL_CODING_RULES.md` to `CLAUDE.md`, unchanged.
+- Different: do not overwrite it. Add the missing sections of
+  `LARAVEL_CODING_RULES.md`; for rules in conflict with the existing
+  ones, do what the user decided. Keep the content of the project
+  (overview, domain notes, ...).
+
+### B. Constants
+
+- `bootstrap/constants.php` missing: copy `bootstrap/constants.php` of
+  this skill, replacing `__APP_NAME__` and `__VERSION__`.
+- File present without a constant: add only the missing constant.
+- Not loaded: in `bootstrap/app.php`, after the `use` statements and
+  before `return Application::configure(...)`, add:
+
+  ```php
+  require_once __DIR__.'/constants.php';
+  ```
+
+### C. Logger
+
+Follow `logger/SETUP_LOGGER.md`, section 2.2 (Logger found) or 2.3
+(Logger not found), then 2.4 (verify). B must be done first: the Logger
+uses `APP_NAME`.
+
+### D. Base models
+
+1. If `spatie/laravel-activitylog` is not installed:
+   - `composer require spatie/laravel-activitylog`;
+   - publish its migrations and config, unless they are already present
+     in `database/migrations/` and `config/activitylog.php`:
+
+     ```bash
+     php artisan vendor:publish \
+         --provider="Spatie\Activitylog\ActivitylogServiceProvider" \
+         --tag="activitylog-migrations"
+     php artisan vendor:publish \
+         --provider="Spatie\Activitylog\ActivitylogServiceProvider" \
+         --tag="activitylog-config"
+     ```
+
+     Do not run the migrations.
+2. Copy the missing files among `helpers/BaseModel.php` and
+   `helpers/BaseModelWithActivityLog.php` to `app/Models/`.
+3. Do not change the existing models to extend the base models: the
+   rule applies to new models. List the models that extend `Model`
+   directly in the report.
+
+### E. `BulkInsert`
+
+Copy `helpers/BulkInsert.php` to `app/Classes/BulkInsert.php`. It uses
+the `Logger` alias, so it needs C done.
+
+### F. Test database
+
+Set `DB_CONNECTION=sqlite` and `DB_DATABASE=:memory:` in `phpunit.xml`
+(uncomment the lines in Laravel 11).
+
+### Not applied
+
+Do not install `thiagoprz/eloquent-composite-key`: it is added when a
+table without a single primary key is needed. Do not reorder the columns
+of existing tables: the column order rule applies to new tables and new
+columns.
+
+---
+
+## 5. Verify
+
+1. `php artisan --version` shows Laravel 11 or 12.
+2. `php artisan tinker --execute="echo APP_NAME, ' ', VERSION;"` prints
+   the application name and version.
+3. `php -l` on every file created or changed in `app/` and `bootstrap/`.
+4. `php artisan tinker --execute="Logger::info('Setup test');"`: the
+   message appears on stdout and in `storage/logs/`.
+5. `php artisan tinker --execute="echo class_exists(App\Models\BaseModelWithActivityLog::class) && class_exists(App\Classes\BulkInsert::class) ? 'ok' : 'ko';"`
+   prints `ok`.
+6. `php artisan test`: new project, the example tests pass; existing
+   project, no test fails that passed in the baseline (section 1,
+   point 6).
+
+If a check fails because of the setup, fix it and run the checks again.
+Report any check that still fails, with its output.
+
+---
+
+## 6. Report
+
+Tell the user:
+
+- the path of the project, the mode (new / existing) and the Laravel
+  version;
+- the table of section 3 with the final state of each component, and
+  what was done for each one (added, changed, left unchanged);
+- the files created or changed by the setup (beyond the Laravel skeleton
+  for a new project);
+- existing project: the models that extend `Model` directly, and any
+  test that fails both before and after the setup;
+- the steps left to the user:
+  - run the migrations (`php artisan migrate`), including the Spatie
+    activity log ones if they were published;
+  - new project: create the git repository and the first branch (the
+    rules in `CLAUDE.md` forbid agents to write on `main` and to
+    commit);
+  - review the changes and commit them;
+  - review `CLAUDE.md` and add the project overview.

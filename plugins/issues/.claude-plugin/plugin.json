@@ -1,0 +1,8 @@
+{
+  "name": "issues",
+  "description": "Scrittura, apertura e chiusura delle issue con Redmine, GitHub o GitLab.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Gabriele"
+  }
+}
