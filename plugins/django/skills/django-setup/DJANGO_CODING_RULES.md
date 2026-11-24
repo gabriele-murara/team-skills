@@ -501,7 +501,7 @@ Rules:
    `<prefix>_utils`, `<prefix>_exceptions`,
    `<prefix>_middlewares`, `<prefix>_signals`, `<prefix>_tests`, ...
    `<prefix>` is the same in every app of the project (e.g.
-   `infojuice`). It avoids the clash with the modules that Django looks
+   `shop`). It avoids the clash with the modules that Django looks
    for by name (`models.py` and a `models/` package cannot coexist) and
    with third-party packages.
 2. **`__init__.py`**: every package and subpackage has an `__init__.py`,

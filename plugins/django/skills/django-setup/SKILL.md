@@ -151,7 +151,7 @@ second one: ask the user which app to use, and use that app instead of
 **Prefix** of the packages (`DJANGO_CODING_RULES.md`, section 5.6): if
 the apps already have packages named `<something>_models`,
 `<something>_views`, ..., propose that prefix; otherwise ask the user,
-proposing the name of the project in lowercase (e.g. `infojuice`). New
+proposing the name of the project in lowercase (e.g. `shop`). New
 project: ask it together with the values for C.
 
 Values needed for C:

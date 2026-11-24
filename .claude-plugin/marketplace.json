@@ -17,13 +17,13 @@
       "name": "django",
       "source": "./plugins/django",
       "description": "Setup di un progetto Django con regole di codifica, costanti, Logger e classi helper.",
-      "version": "1.0.0"
+      "version": "1.0.1"
     },
     {
       "name": "issues",
       "source": "./plugins/issues",
-      "description": "Scrittura, apertura e chiusura delle issue con Redmine, GitHub o GitLab.",
-      "version": "1.3.0"
+      "description": "Scrittura, download, apertura e chiusura delle issue con Redmine, GitHub o GitLab.",
+      "version": "1.4.0"
     }
   ]
 }

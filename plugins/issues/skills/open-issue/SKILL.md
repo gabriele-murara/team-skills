@@ -64,42 +64,31 @@ che lo restituisce.
 
 Il gestionale è indicato dalla variabile d'ambiente `ISSUE_TRACKER`
 (`redmine`, `github` o `gitlab`), di norma impostata nel blocco `env` di
-`.claude/settings.json` del progetto. Se non è impostata, salta al
+`.claude/settings.json` del progetto, oppure nel file
+`.claude/.env.claude`. Se non è impostata in nessuno dei due, salta al
 punto 3.2.
 
-Non stampare mai i token né includerli nei messaggi all'utente.
+Scarica la issue con lo script della skill `download-issue` (cartella
+`../download-issue/` rispetto a questa skill), che salva la copia locale
+in `issues/issue-<numero>.md`:
 
-- **redmine**: servono `REDMINE_URL` e `REDMINE_API_KEY`.
+```bash
+${CLAUDE_SKILL_DIR}/../download-issue/download_issue.sh <numero>
+```
 
-  ```bash
-  curl -sf -H "X-Redmine-API-Key: $REDMINE_API_KEY" \
-      "$REDMINE_URL/issues/<numero>.json?include=journals,attachments"
-  ```
+Le variabili richieste, il formato del file e il significato degli
+errori sono descritti in `../download-issue/SKILL.md`. Non stampare mai
+i token, non includerli nei messaggi all'utente e non aprire
+`.claude/.env.claude`: lo legge lo script.
 
-  Usa `subject`, `description`, `tracker`, `status`, `priority`,
-  `fixed_version` e le note dei `journals`.
-
-- **github**: serve `gh` autenticato (`gh auth status`).
-
-  ```bash
-  gh issue view <numero> --json number,title,body,labels,milestone,comments
-  ```
-
-- **gitlab**: servono `GITLAB_URL` (ad esempio `https://gitlab.com`) e
-  `GITLAB_TOKEN`. Ricava il percorso del progetto (`gruppo/progetto`) da
-  `git remote get-url origin` e codificalo per l'URL (`/` → `%2F`).
-
-  ```bash
-  curl -sf -H "PRIVATE-TOKEN: $GITLAB_TOKEN" \
-      "$GITLAB_URL/api/v4/projects/<percorso-codificato>/issues/<numero>"
-  curl -sf -H "PRIVATE-TOKEN: $GITLAB_TOKEN" \
-      "$GITLAB_URL/api/v4/projects/<percorso-codificato>/issues/<numero>/notes?sort=asc"
-  ```
-
-Se le credenziali mancano o la chiamata fallisce, dillo all'utente
-(senza mostrare i token) e passa al punto 3.2.
-
-Se la lettura riesce, salva il testo come descritto al punto 3.4.
+- **File scritto o già aggiornato**: leggi `issues/issue-<numero>.md` e
+  vai al punto 4.
+- **Codice di uscita 3**: il file esiste già con un contenuto diverso,
+  che potrebbe contenere modifiche dell'utente. Chiedi se sovrascriverlo
+  (rilancia con `--force` prima del numero) o se usare il file com'è.
+- **Errore** (credenziali mancanti, connessione fallita, HTTP 4xx):
+  riporta il messaggio all'utente e passa al punto 3.2. Una connessione
+  fallita o in timeout indica di solito che la VPN non è attiva.
 
 ### 3.2 Cartella `issues`
 
@@ -116,53 +105,6 @@ Escludi `closed-issue-<numero>.md`, che è la nota di chiusura.
 
 Dillo all'utente e chiedigli di descrivere la issue o di indicare dove
 trovarla. Il branch resta creato.
-
-### 3.4 Copia locale della issue
-
-Quando il testo arriva dal gestionale, salvane una copia in
-`issues/issue-<numero>.md`, così resta consultabile anche senza
-gestionale e alle esecuzioni successive la trova il punto 3.2.
-
-1. Se mancano, crea la cartella `issues/` e il suo `.gitignore`
-   (contenuto: `*` e `!.gitignore`, uno per riga).
-2. Se `issues/issue-<numero>.md` esiste già con un contenuto diverso,
-   chiedi all'utente se sovrascriverlo: potrebbe contenere sue modifiche.
-3. Scrivi il file in CommonMark, in italiano, senza emoji, con questa
-   struttura (ometti le sezioni vuote):
-
-   ```markdown
-   # #<numero> <titolo>
-
-   - **Fonte:** <redmine|github|gitlab> - <URL web della issue>
-   - **Tipo:** <tracker o etichette>
-   - **Stato:** <stato>
-   - **Priorità:** <priorità>
-   - **Versione:** <fixed_version o milestone>
-   - **Scaricata il:** <data AAAA-MM-GG>
-
-   ## Descrizione
-
-   <descrizione o body, così com'è>
-
-   ## Allegati
-
-   - <nome file> - <URL>
-
-   ## Note
-
-   ### <autore> - <data>
-
-   <testo della nota o del commento>
-   ```
-
-   Riporta la descrizione e le note senza riassumerle né riscriverle.
-   Ometti le note vuote (ad esempio i journal di Redmine con soli cambi
-   di campo) e quelle di sistema di GitLab (`system: true`). Gli
-   allegati non vanno scaricati: basta l'elenco con i link. Non scrivere
-   mai token o chiavi nel file, nemmeno dentro gli URL.
-
-Se il file non si può scrivere, avvisa l'utente e prosegui: la copia
-locale è utile ma non bloccante.
 
 ## 4. Analisi e proposta
 

@@ -15,9 +15,11 @@ plugins/<plugin>/skills/<skill>/SKILL.md    istruzioni della skill (frontmatter 
 
 Plugin attuali:
 
-- `issues` — skill `write-issue`, `open-issue`, `close-issue`: preparano testi
-  di issue in `issues/` e lavorano con Redmine, GitHub o GitLab (variabile
-  `ISSUE_TRACKER`).
+- `issues` — skill `write-issue`, `download-issue`, `open-issue`,
+  `close-issue`: preparano testi di issue in `issues/` e lavorano con
+  Redmine, GitHub o GitLab (variabile `ISSUE_TRACKER`). `download-issue`
+  contiene lo script `download_issue.sh`, l'unico punto che legge il
+  gestionale.
 - `laravel` — skill `laravel-setup`: prepara un progetto Laravel 11/12.
   Sui progetti legacy (Laravel < 11) scrive solo un `CLAUDE.md` con alcune
   sezioni delle regole (sezione 7 di `SKILL.md`) e non tocca altro. Gli
@@ -78,8 +80,8 @@ gestionale).
 
 ### Plugin `issues`
 
-- La sezione **"Gestionale: solo lettura"** è ripetuta identica nelle tre
-  skill: se la cambi, cambiala in tutte. Le skill non devono mai scrivere sul
+- La sezione **"Gestionale: solo lettura"** è ripetuta identica nelle
+  quattro skill: se la cambi, cambiala in tutte. Le skill non devono mai scrivere sul
   gestionale (solo `GET`, `gh issue view`/`list`); i testi da inserire vanno in
   file sotto `issues/`.
 - La cartella `issues/` del progetto di destinazione ha un `.gitignore` con
@@ -87,11 +89,17 @@ gestionale).
 - Le skill sono collegate: `open-issue` crea il branch `issue-<n>` da
   `develop`/`develop-*` e registra il branch di partenza in
   `git config branch.issue-<n>.base`, che `close-issue` legge; `open-issue`
-  cerca in `issues/` i file con il numero della issue nel nome, come quelli
-  prodotti da `write-issue` e rinominati dall'utente. Se cambi uno di questi
+  scarica la issue con `../download-issue/download_issue.sh`, che scrive
+  `issues/issue-<n>.md` (codice di uscita 3 se il file esiste con un
+  contenuto diverso), e altrimenti cerca in `issues/` i file con il
+  numero della issue nel nome, come quelli prodotti da `write-issue` e
+  rinominati dall'utente. Se cambi uno di questi
   accordi, aggiorna tutte le skill coinvolte.
 - I token (`REDMINE_API_KEY`, `GITLAB_TOKEN`) non devono mai comparire
-  nell'output né nei file scritti.
+  nell'output né nei file scritti. Lo script li legge dall'ambiente o da
+  `.claude/.env.claude` e li passa a `curl` come header, mai sulla riga
+  di comando. Dopo una modifica allo script provalo con i tre gestionali
+  (anche con `curl` e `gh` finti) e controlla `bash -n`.
 
 ### Plugin `laravel`
 
