@@ -1,6 +1,6 @@
 ---
 name: laravel-setup
-description: Sets up a Laravel project with the coding rules (CLAUDE.md), the constants file, the project Logger and the helper classes. Creates a new Laravel 12 project, or completes an existing Laravel 11/12 project by adding only the missing parts. Use it when the user asks to prepare, create, set up or align a Laravel project.
+description: Sets up a Laravel project with the coding rules (CLAUDE.md), the constants file, the project Logger and the helper classes. Creates a new Laravel 12 project, or completes an existing Laravel 11/12 project by adding only the missing parts. On legacy projects (Laravel older than 11) it writes only the coding rules in CLAUDE.md and leaves the project as it is. Use it when the user asks to prepare, create, set up or align a Laravel project.
 argument-hint: "[project-path]"
 ---
 
@@ -13,7 +13,10 @@ in this skill folder:
   Laravel 12 project, then set it up;
 - **existing project**: the folder contains a Laravel 11 or 12 project.
   Add only the missing parts and do not touch the parts that already
-  meet the rules.
+  meet the rules;
+- **legacy project**: the folder contains a project with Laravel older
+  than 11. Write only the coding rules in `CLAUDE.md` (section 7): the
+  rest of the project stays as it is.
 
 Files of this skill (paths relative to this `SKILL.md`):
 
@@ -38,28 +41,45 @@ write on the `main` branch, change only what is needed.
    path of the project.
    - The folder does not exist or is empty → **new project**.
    - The folder contains `artisan` and `composer.json` requires
-     `laravel/framework` → **existing project**.
+     `laravel/framework` → **existing** or **legacy project**, by
+     version (point 2).
    - Anything else → stop and ask the user.
-2. **Tools**: `php -v` (PHP >= 8.2), `composer -V`; for a new project
-   also `npm -v`. If one is missing, stop and tell the user.
-3. **SQLite driver**: `php -m | grep -i pdo_sqlite`. Required for a new
+2. **Laravel version** (existing folder only): read the installed
+   version from `composer.lock` (package `laravel/framework`); it needs
+   neither PHP nor `vendor/`. Without `composer.lock`, read the
+   constraint in `composer.json` and ask the user to confirm the
+   version.
+   - 11.x, 12.x → **existing project**. If `vendor/` is missing, ask the
+     user to run `composer install` first. Laravel 11 no longer receives
+     security fixes: recent Composer versions block its releases because
+     of security advisories, so never suggest `composer update`, and if
+     a `composer require` fails for this reason, stop (do not suggest
+     disabling the advisories policy). Mention it in the report.
+   - Older than 11 → **legacy project**: do point 5, then go to
+     section 7.
+   - Newer than 12 → stop and tell the user.
+
+New and existing project only:
+
+3. **Environment and tools**: find how the project runs
+   (LARAVEL_CODING_RULES.md, section 3.1): the section "Execution
+   environment" of an existing `CLAUDE.md`, a Docker container
+   (`Dockerfile` and `docker-compose.yml` / `compose.yaml`, or Laravel
+   Sail), or the machine (always for a new project). If you cannot tell,
+   ask the user how they run the project. Every command from here on
+   runs in that environment, and it is written in `CLAUDE.md`
+   (component A). Then check `php -v` (PHP >= 8.2) and `composer -V`;
+   for a new project also `npm -v`. If one is missing, stop and tell
+   the user.
+4. **SQLite driver**: `php -m | grep -i pdo_sqlite`. Required for a new
    project (Laravel uses SQLite by default for database, sessions and
    tests) and for an existing project that uses SQLite
    (`DB_CONNECTION=sqlite` in `.env`, or SQLite in `phpunit.xml`). If the
    extension is missing, stop and tell the user (e.g. `php8.x-sqlite3`
    package on Debian/Ubuntu).
 
-Existing project only:
+Existing and legacy project (point 6 only for an existing project):
 
-4. **Laravel version**: read the installed version from `composer.lock`
-   (package `laravel/framework`) or with `php artisan --version`. Only
-   11.x and 12.x are supported: with any other version, stop and tell
-   the user. If `vendor/` is missing, ask the user to run
-   `composer install` first. Laravel 11 no longer receives security
-   fixes: recent Composer versions block its releases because of
-   security advisories, so do not run `composer update`, and if a
-   `composer require` fails for this reason, stop and tell the user (do
-   not disable the advisories policy). Mention it in the report.
 5. **Git**: if the folder is a git repository, check the branch
    (`git branch --show-current`). On `main`, stop and ask the user to
    switch branch. If there are uncommitted changes (`git status`), tell
@@ -67,7 +87,9 @@ Existing project only:
    reviewed apart.
 6. **Tests baseline**: run `php artisan test` and keep the result. It is
    compared with the result after the setup (section 5): failures that
-   were already there are not caused by the setup.
+   were already there are not caused by the setup. If the test database
+   cannot be used (e.g. it does not exist yet, or the database user
+   cannot reach it), tell the user and go on without the baseline.
 
 ---
 
@@ -114,7 +136,7 @@ Check each component and give it a state:
 | C | Logger | It meets section 1 of `logger/SETUP_LOGGER.md` (check as in its section 2.1) |
 | D | Base models | `App\Models\BaseModel` and `App\Models\BaseModelWithActivityLog` exist and behave as the files in `helpers/`, and `spatie/laravel-activitylog` is installed |
 | E | `BulkInsert` | `App\Classes\BulkInsert` exists and behaves as `helpers/BulkInsert.php` |
-| F | Test database | `phpunit.xml` sets `DB_CONNECTION=sqlite` and `DB_DATABASE=:memory:` (in Laravel 11 they are commented out by default) |
+| F | Test database | `phpunit.xml` (or `.env.testing`) makes the tests use the same `DB_CONNECTION` as the project and a database other than the development one (`:memory:` with SQLite) |
 
 Values needed for B:
 
@@ -123,6 +145,9 @@ Values needed for B:
 - `VERSION`: from `bootstrap/constants.php` if present, otherwise ask
   the user (propose `version` from `composer.json` if present, or
   `0.1.0`).
+
+Value needed for F, when the project does not use SQLite: the name of
+the test database (ask the user, proposing `<development database>_test`).
 
 **Existing project**: show the user the table with the state of each
 component and, for each **different** component, its differences. Ask
@@ -139,6 +164,16 @@ then apply all of them.
 Apply only the **missing** components, and the **different** ones the
 user asked to change. Never rewrite a compliant component.
 
+**Dependencies** (`LARAVEL_CODING_RULES.md`, section 3.2):
+
+- **existing project**: the agent never installs, updates or removes
+  packages. When a component needs one, show the user the command to
+  run (e.g. `composer require spatie/laravel-activitylog`), wait for the
+  user to run it, check that the package is installed, then continue;
+- **new project**: the project does not exist yet, so the agent runs
+  the commands itself, both to create it (section 2) and to install the
+  packages of the components.
+
 ### A. `CLAUDE.md`
 
 - Missing: copy `LARAVEL_CODING_RULES.md` to `CLAUDE.md`, unchanged.
@@ -146,6 +181,9 @@ user asked to change. Never rewrite a compliant component.
   `LARAVEL_CODING_RULES.md`; for rules in conflict with the existing
   ones, do what the user decided. Keep the content of the project
   (overview, domain notes, ...).
+- Both cases: if `CLAUDE.md` has no section "Execution environment",
+  add it at the end with the environment found in section 1, point 3,
+  as in section 3.1 of the rules.
 
 ### B. Constants
 
@@ -168,7 +206,8 @@ uses `APP_NAME`.
 ### D. Base models
 
 1. If `spatie/laravel-activitylog` is not installed:
-   - `composer require spatie/laravel-activitylog`;
+   - install it (`composer require spatie/laravel-activitylog`; see
+     Dependencies above);
    - publish its migrations and config, unless they are already present
      in `database/migrations/` and `config/activitylog.php`:
 
@@ -195,8 +234,15 @@ the `Logger` alias, so it needs C done.
 
 ### F. Test database
 
-Set `DB_CONNECTION=sqlite` and `DB_DATABASE=:memory:` in `phpunit.xml`
-(uncomment the lines in Laravel 11).
+In `phpunit.xml`, set the database of the tests on the same engine as
+the project (`DB_CONNECTION` of `.env`):
+
+- SQLite (always for a new project): `DB_CONNECTION=sqlite` and
+  `DB_DATABASE=:memory:` (uncomment the lines in Laravel 11);
+- other engines: `DB_CONNECTION` of the project and `DB_DATABASE` with
+  the name of the test database. Remove the SQLite lines, if present.
+  The agent does not create the database (section 2.3 of the rules:
+  no DDL by hand): the user creates it (section 6).
 
 ### Not applied
 
@@ -241,8 +287,84 @@ Tell the user:
 - the steps left to the user:
   - run the migrations (`php artisan migrate`), including the Spatie
     activity log ones if they were published;
+  - project not on SQLite: create the test database set in
+    `phpunit.xml`, if it does not exist yet;
   - new project: create the git repository and the first branch (the
     rules in `CLAUDE.md` forbid agents to write on `main` and to
     commit);
   - review the changes and commit them;
   - review `CLAUDE.md` and add the project overview.
+
+---
+
+## 7. Legacy project (Laravel older than 11)
+
+The only change is `CLAUDE.md`. Do not touch anything else, even if it
+does not meet the rules or is incompatible with them: no packages, no
+constants file, no Logger, no helper classes, no changes to
+configuration, code, dependencies or migrations. Do not run the tests:
+the setup does not change the code.
+
+### 7.1 Rules for a legacy project
+
+The legacy `CLAUDE.md` contains only these sections of
+`LARAVEL_CODING_RULES.md`, copied unchanged, with their original numbers
+and in their order:
+
+| Section | Content |
+|---|---|
+| Glossary | Entity and managed model |
+| 1 | Working method |
+| 2.1 | Commits: agents never commit |
+| 2.2 | Branch `main` |
+| 2.3 | Migrations: agents never run them; only the operations of the change |
+| 2.4 | Data: unreliable, read and write queries allowed, no migrations |
+| 3.1 | Execution environment: machine or Docker, ask and record it |
+| 3.2 | Dependencies: the user installs them, the agent suggests |
+| 3.3 | Configuration: environment, then `.env`, read from the configuration |
+| 4 | Code style |
+| 5.6 | Code structure (new classes only, existing code stays) |
+| 6.1 | Column order |
+| 7 | Testing |
+
+Sections 2 and 5 keep their titles. The file starts with:
+
+```markdown
+# Laravel Coding Rules
+
+Coding rules for this legacy project (Laravel <version>). They apply to
+new code and to the lines being changed: the existing code stays as it
+is, and the features that this Laravel version does not have are
+skipped. The section numbers are those of the full rules.
+```
+
+### 7.2 Apply
+
+- `CLAUDE.md` missing: create it as in 7.1.
+- `CLAUDE.md` present: compare it with 7.1 and show the user the missing
+  sections and the rules in conflict with the existing ones. Ask how to
+  proceed and do not change anything before the user answers. Then add
+  the missing sections and, for the conflicts, do what the user decided.
+  Keep the content of the project (overview, domain notes, ...).
+- Both cases: if the execution environment is clear from the project
+  (section 3.1 of the rules), add the section "Execution environment"
+  at the end, unless it is already there. If it is not clear, do not
+  ask: the agent asks the first time it needs to run a command.
+
+### 7.3 Verify
+
+1. `CLAUDE.md` contains the sections of 7.1, with the same rules.
+2. `git status` (if the folder is a git repository) shows no change
+   other than `CLAUDE.md`.
+
+### 7.4 Report
+
+Tell the user:
+
+- the path of the project, the mode (legacy) and the Laravel version;
+- what was done to `CLAUDE.md` (created, sections added, conflicts and
+  how they were solved);
+- that, being a legacy project, the constants file, the Logger, the
+  helper classes and the Spatie activity log were not installed;
+- the steps left to the user: review `CLAUDE.md`, add the project
+  overview, and commit it.

@@ -8,6 +8,17 @@ adapt them.
 
 ---
 
+## Glossary
+
+- **Entity**: a domain object managed by the system, made of a model,
+  its views and its controller. Creating an entity means creating all
+  its parts.
+- **Managed model**: a model used by the system through forms, tables
+  or lists, or that needs a new table in the database. Creating an
+  entity always creates a managed model.
+
+---
+
 ## 1. Working method
 
 ### 1.1 Think before coding
@@ -37,7 +48,15 @@ Touch only what you must. Clean up only your own mess.
 
 - Do not "improve" adjacent code, comments or formatting.
 - Do not refactor things that are not broken.
-- Match the existing style, even if you would do it differently.
+- New lines, and existing lines that the task changes, follow the
+  coding rules (section 4), even if the function or class then mixes
+  two styles. The other lines keep their style.
+- If most of the function or class you are changing already follows
+  the coding rules, ask the user whether to bring the rest of it in line
+  too, and do it only if the user agrees.
+- Exception: when the user explicitly asks to format a function, a
+  class or a file with the coding rules, format exactly that part
+  (section 4.1).
 - If you notice unrelated dead code, mention it: do not delete it.
 - Remove imports, variables and functions that **your** changes made
   unused. Do not remove pre-existing dead code unless asked.
@@ -61,7 +80,7 @@ For multi-step tasks, state a brief plan with a check for each step:
 
 ---
 
-## 2. Git, branches and migrations
+## 2. Git, branches, migrations and data
 
 ### 2.1 Commits
 
@@ -90,24 +109,88 @@ For multi-step tasks, state a brief plan with a check for each step:
 - Agents never run migrations: no `migrate`, `migrate:fresh`,
   `migrate:rollback`, `migrate:refresh`, `migrate:reset`, no `up()` /
   `down()` in tinker, no DDL executed by hand. The rule holds on every
-  database, even when the user asks to "proceed".
+  database, even when the user asks to "proceed". The only exception is
+  the test database, where the tests run the migrations (section 7).
 - An agent may write a migration and check it without running it
   (syntax, code review, comparison with `information_schema`). Then it
   tells the user that the migration is ready and must be run by the user.
+- A migration contains **only** the operations of the change being made:
+  do not add changes to tables, columns or indexes not involved in it.
+- In legacy code a model may not match its table on purpose: do not fix
+  it, and do not create migrations for it, unless the task asks.
 
-### 2.4 Development database
+### 2.4 Data
 
-- Data in the development database may be unreliable: use it to check
-  that code and scripts run, not to draw conclusions about the data.
+- Data in the development database may be unreliable: never rely on it
+  to reconstruct the behaviour of the code (read the code instead). Use
+  it only to check that code and scripts run.
+- Read and write queries on the development database are allowed
+  (`SELECT`, Eloquent and query builder reads in `tinker`; `INSERT`,
+  `UPDATE`, `DELETE`, `save()`, `create()`, `db:seed`).
+- Migrations are not data queries: agents never run them, also when the
+  user asks (section 2.3).
 
 ---
 
 ## 3. Environment and commands
 
+### 3.1 Execution environment
+
+- Every command runs in the execution environment of the project: on
+  the machine or in Docker.
+- If the section "Execution environment" at the end of this file says
+  how the project runs, follow it.
+- Otherwise work it out from the project: with a `Dockerfile` and a
+  `docker-compose.yml` (or `compose.yaml`) the project probably runs in
+  Docker, and the commands run in its container
+  (`docker compose exec <service> php artisan <command>`, or
+  `./vendor/bin/sail artisan <command>` with Laravel Sail); without them
+  it probably runs on the machine, with its PHP and Composer.
+- When in doubt, ask the user which is the execution environment the
+  first time a command is needed. Then write the answer in the section
+  "Execution environment" at the end of this file (add it if missing),
+  so as not to ask again:
+
+  ```markdown
+  ## Execution environment
+
+  - Docker, service `app`: `docker compose exec app <command>`.
+  ```
+
+  Writing this file follows section 2.2: on `main`, do not write it and
+  tell the user.
+
+### 3.2 Dependencies
+
+- Agents never install, update or remove dependencies: no
+  `composer install` / `update` / `require` / `remove`, `npm install` /
+  `update`. The user runs them.
+- When a task needs a new dependency, or another version of an
+  installed one, suggest to the user the command to run (e.g.
+  `composer require vendor/package:^1.2`), with a version compatible
+  with the installed framework and packages. Then wait for the user to
+  run it.
+- If the dependencies are not installed, ask the user to install them.
+
+### 3.3 Configuration
+
+- The values that change from one environment to another (credentials,
+  hosts, keys, flags) are read from the environment variables and, when
+  a variable is not set, from `.env`: the environment always wins over
+  `.env`.
+- The values enter the configuration in the files of `config/`
+  (`'key' => env('VARIABLE', 'default')`), and the code always reads
+  them from there with `config('file.key')`. Never call `env()` outside
+  the files of `config/`: with the configuration cached it returns
+  `null`.
+
+### 3.4 Commands
+
 - Common commands:
   - `composer dev`: server + queue + logs + vite;
   - `composer test` / `php artisan test`: test suite;
-  - `./vendor/bin/pint`: formatter;
+  - `./vendor/bin/pint <file>`: formatter, only on new files
+    (section 4.1);
   - `php artisan config:clear`, `cache:clear`, `route:clear`.
 - Queue worker in development: `php artisan queue:listen --tries=1`.
 
@@ -117,13 +200,24 @@ For multi-step tasks, state a brief plan with a check for each step:
 
 ### 4.1 Formatting
 
-1. Follow Laravel Pint formatting (`./vendor/bin/pint`).
+1. Follow the Laravel Pint style (`./vendor/bin/pint`, with the
+   `pint.json` of the project if present).
+
+   The formatter runs only on new code: only on the files created in
+   the task. In existing files, write the new and changed lines already
+   formatted and do not run the formatter on the file: it would change
+   lines that are not part of the task (section 1.3).
+
+   Exception: when the user explicitly asks to format a function, a
+   class or a file with the coding rules, format exactly that part: a
+   file with the formatter; a function or a class by applying the rules
+   to it only, leaving the rest of the file as it is.
 2. Keep lines within **80 columns**.
 3. Build strings with `sprintf()` instead of concatenation or
    interpolation:
 
    ```php
-   Logger::info(sprintf("Missing records in %s: %d", $table, $count));
+   $msg = sprintf("Missing records in %s: %d", $table, $count);
    ```
 
    Exception: raw SQL queries may use a multi-line double-quoted string
@@ -186,7 +280,10 @@ For multi-step tasks, state a brief plan with a check for each step:
 
 Use **English only**, everywhere: class, method and variable names,
 comments, documentation, tests, database comments, migration and log
-messages, user-facing strings.
+messages, user-facing strings. If the project uses translations, wrap
+user-facing strings in `__()` (`@lang` / `{{ __() }}` in Blade). If
+it does not, as some legacy projects, do not handle translations: no
+translation functions and no language files.
 
 ---
 
@@ -198,6 +295,33 @@ messages, user-facing strings.
   directly:
   - `BaseModel`: base model with common functionality;
   - `BaseModelWithActivityLog`: `BaseModel` + Spatie activity logging.
+- **The user decides the activity log of every model.** When asked to
+  create a new **entity** or a new **managed model** (see the
+  Glossary), ask the user whether its model needs the activity log
+  before writing it, and extend `BaseModelWithActivityLog` only if the
+  answer is yes, otherwise `BaseModel`. Never choose by yourself and
+  never assume a default, also when the task creates several entities
+  or models: ask for each one. The activity log writes a row for every
+  change, so models that are already a log are a reason to answer no:
+  audit, logging, journals, operations, movements (e.g. a
+  `ProductMovement` of a warehouse application, which already records
+  the timestamp, the user and the change of quantity of its
+  `Product`). Mention it when you ask.
+- Switching an existing model between `BaseModel` and
+  `BaseModelWithActivityLog` is done only when the user asks.
+- The query builder (`DB::table()`), `insert()`, the mass `update()` and
+  `delete()` on a query (e.g. `Product::where(...)->update(...)`) and
+  `BulkInsert` do not go through the activity log. Use them only for
+  mass operations: every write on a single record goes through the
+  model, so that the activity log records it: `Product::create(...)`,
+  `$product->save()`, `$product->update([...])`, `$product->delete()`;
+  never `insert()`, the query builder or an update or delete on a query
+  that selects one record.
+- Models with `deleted_at` (section 6.1) use soft deletes: `use
+  Illuminate\Database\Eloquent\SoftDeletes;` and `use SoftDeletes;` in
+  the model. `delete()` sets `deleted_at` and the queries hide the
+  deleted rows; `withTrashed()` and `onlyTrashed()` include them,
+  `restore()` restores a row, `forceDelete()` deletes it.
 - Tables without a single primary key use
   `thiagoprz/eloquent-composite-key`.
 
@@ -265,6 +389,37 @@ public function handle() {
 }
 ```
 
+### 5.5 Naming
+
+- Parts of an entity (Glossary): controller `<Model>Controller`, views
+  in `resources/views/<models>/` (e.g.
+  `resources/views/products/index.blade.php`).
+- Test classes: `<Feature>Test` (`tests/Feature/<Feature>Test.php`,
+  `tests/Unit/<Feature>Test.php`).
+- Files: the name of their class (section 5.6).
+
+### 5.6 Code structure
+
+1. Follow the standard structure of Laravel (PSR-4): every class is in
+   its own file, named after the class, in the folder of its kind
+   (`app/Models/`, `app/Http/Controllers/`, `app/Http/Requests/`,
+   `app/Jobs/`, `app/Console/Commands/`, ...).
+2. Helpers and business logic go in a **dedicated class for the
+   specific activity**, never in global helper functions nor in a
+   generic class that collects unrelated methods:
+   - business logic: `app/Services/<Domain>/<Activity>.php` (e.g.
+     `app/Services/Products/ImportProducts.php`);
+   - helpers: `app/Classes/<Activity>.php` (e.g.
+     `app/Classes/CsvExporter.php`).
+
+   Controllers, models, Jobs and artisan commands use these classes:
+   they do not contain the logic themselves.
+3. When a folder grows, group its classes in subfolders by topic, with
+   the namespace that matches the folder (e.g.
+   `app/Services/Products/`).
+4. Existing code stays where it is: the rule applies to new classes.
+   Move an existing class or function only when the user asks.
+
 ---
 
 ## 6. Database
@@ -291,6 +446,13 @@ Columns of every table follow this order:
 12. `created_at`;
 13. `updated_at`;
 14. `deleted_at`.
+
+`created_at`, `updated_at` and `deleted_at` are mandatory in every
+table, always the last three columns and in this order
+(`$table->timestamps()` then `$table->softDeletes()`). The only
+exception is the pivot tables of the many-to-many relations. The rule
+applies to new tables: add the three columns to an existing table only
+when the user asks.
 
 ```php
 Schema::create('products', function (Blueprint $table) {
@@ -324,6 +486,10 @@ Schema::table('products', function (Blueprint $table) {
 });
 ```
 
+`->after()` works only on **MySQL / MariaDB**. On **PostgreSQL /
+SQLite** columns cannot be placed: leave `->after()` out of the
+migration, and the new column goes at the end of the table.
+
 ### 6.2 Bulk inserts **(helper)**
 
 Insert large datasets in chunks with `BulkInsert` (default chunk: 2000
@@ -335,13 +501,21 @@ use App\Classes\BulkInsert;
 (new BulkInsert('table_name', $records, 1000))->save();
 ```
 
+`BulkInsert` writes the records as they are: set `created_at` and
+`updated_at` in each record (section 6.1).
+
 ---
 
 ## 7. Testing
 
 - Tests are in `tests/Feature/` and `tests/Unit/`, configured in
   `phpunit.xml`.
-- Test database: SQLite `:memory:`.
+- Test database: a separate database on the same engine as the project,
+  set in `phpunit.xml` (or `.env.testing`): the same `DB_CONNECTION`,
+  and as `DB_DATABASE` a database used only by the tests (`:memory:`
+  with SQLite). The user creates it. The tests run the migrations on
+  it: this is allowed. Never point the tests at the development or
+  production database.
 - Test names and comments are in English.
 
 ---

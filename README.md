@@ -4,7 +4,8 @@ Marketplace di plugin per Claude Code con le skill condivise tra i progetti.
 
 | Plugin | Skill | Uso |
 |---|---|---|
-| `laravel` | `laravel-setup` | Setup di un progetto Laravel 11/12: `CLAUDE.md`, costanti, Logger, classi helper |
+| `laravel` | `laravel-setup` | Setup di un progetto Laravel 11/12: `CLAUDE.md`, costanti, Logger, classi helper. Sui progetti legacy (Laravel < 11) scrive solo le regole in `CLAUDE.md` |
+| `django` | `django-setup` | Setup di un progetto Django 4.2/5.x/6.x: `CLAUDE.md` (con la struttura a package, una classe per modulo), app `core` con versione in `.version`, Logger, classi helper. Sui progetti legacy (Django < 4.2) scrive solo le regole in `CLAUDE.md` |
 | `issues` | `write-issue` | Scrive il testo di una issue in `issues/`, da copiare nel gestionale |
 | `issues` | `open-issue <n>` | Da `develop`/`develop-*`: crea e pubblica `issue-<n>`, legge la issue e propone una soluzione |
 | `issues` | `close-issue <n>` | Scrive la nota di chiusura in `issues/closed-issue-<n>.md` |
@@ -26,7 +27,8 @@ progetto, così vale per tutti):
   },
   "enabledPlugins": {
     "issues@team-skills": true,
-    "laravel@team-skills": true
+    "laravel@team-skills": true,
+    "django@team-skills": true
   },
   "env": {
     "ISSUE_TRACKER": "redmine",
@@ -36,7 +38,7 @@ progetto, così vale per tutti):
 ```
 
 Abilita solo i plugin che servono al progetto (`laravel` solo nei
-progetti Laravel). All'apertura del progetto Claude Code chiede di
+progetti Laravel, `django` solo nei progetti Django). All'apertura del progetto Claude Code chiede di
 fidarsi del marketplace e installa i plugin.
 
 In alternativa, a mano: `/plugin marketplace add gabriele-murara/team-skills`, poi

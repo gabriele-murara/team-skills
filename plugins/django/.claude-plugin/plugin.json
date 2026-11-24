@@ -1,0 +1,9 @@
+{
+  "name": "django",
+  "description": "Setup di un progetto Django con regole di codifica, costanti, Logger e classi helper.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Gabriele Murara"
+  },
+  "license": "MIT"
+}

@@ -163,8 +163,10 @@ Create it and set it up:
    `console` when running in the terminal.
 7. Add the variables of section 1, point 7 to `.env.example` and, if
    present, to `.env`.
-8. Ask the user whether to install
-   `bramus/monolog-colored-line-formatter`. The Logger works without it.
+8. Ask the user whether they want
+   `bramus/monolog-colored-line-formatter` (the Logger works without
+   it). If so, install it as in `../SKILL.md`, section 4
+   (Dependencies).
 9. Run `composer dump-autoload`.
 
 ### 2.4 Verify
