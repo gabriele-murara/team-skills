@@ -225,8 +225,8 @@ For multi-step tasks, state a brief plan with a check for each step:
    class or a file with the coding rules, format exactly that part: a
    file with the formatter; a function or a class by applying the rules
    to it only, leaving the rest of the file as it is.
-2. Keep lines within **80 columns**. Split long strings over several
-   lines:
+2. Keep lines within **80 columns**. The limit does not apply to
+   Markdown (`.md`) files. Split long strings over several lines:
 
    ```python
    msg = "Stored {} records in `{}` "

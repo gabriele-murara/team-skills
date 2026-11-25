@@ -51,7 +51,10 @@ in `issues/`: lo copia l'utente.
 
 ## Template della nota
 
-Il file deve seguire questo formato (CommonMark, titoli da ##):
+Il file deve seguire questo formato (CommonMark, titoli da ##).
+Nessun limite di lunghezza delle righe (il limite di 80 colonne non
+vale per i file `.md`): non andare a capo dentro un paragrafo o una
+voce di elenco, scrivili su una sola riga.
 
 ```markdown
 ## Riassunto

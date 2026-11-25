@@ -1,7 +1,7 @@
 {
   "name": "laravel",
   "description": "Setup di un progetto Laravel 11/12 con regole di codifica, costanti, Logger e classi helper; sui progetti legacy solo le regole.",
-  "version": "1.2.0",
+  "version": "1.2.2",
   "author": {
     "name": "Gabriele"
   },

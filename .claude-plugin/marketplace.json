@@ -11,19 +11,19 @@
       "name": "laravel",
       "source": "./plugins/laravel",
       "description": "Setup di un progetto Laravel 11/12 con regole di codifica, costanti, Logger e classi helper; sui progetti legacy solo le regole.",
-      "version": "1.2.0"
+      "version": "1.2.2"
     },
     {
       "name": "django",
       "source": "./plugins/django",
       "description": "Setup di un progetto Django con regole di codifica, costanti, Logger e classi helper.",
-      "version": "1.0.1"
+      "version": "1.0.3"
     },
     {
       "name": "issues",
       "source": "./plugins/issues",
       "description": "Scrittura, download, apertura e chiusura delle issue con Redmine, GitHub o GitLab.",
-      "version": "1.4.0"
+      "version": "1.4.1"
     }
   ]
 }

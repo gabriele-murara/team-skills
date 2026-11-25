@@ -42,6 +42,12 @@ Read `DJANGO_CODING_RULES.md` before starting: its rules apply to this
 setup too. In particular: never apply migrations, never commit, never
 write on the `main` branch, change only what is needed.
 
+The 80-column limit does not apply to Markdown files: the text this
+skill writes in `CLAUDE.md` (for example the section "Execution
+environment") has no line length limit, with one line per paragraph
+or list item. Sections copied from the rules keep their text
+unchanged.
+
 ---
 
 ## 1. Mode and checks

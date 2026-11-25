@@ -109,6 +109,9 @@ Regole:
 - La riga `# Titolo` va nel campo titolo del gestionale; il resto, dai
   titoli `##` in giù, va nella descrizione.
 - Formato CommonMark; codice e log in code block con il linguaggio.
+- Nessun limite di lunghezza delle righe (il limite di 80 colonne non
+  vale per i file `.md`): non andare a capo dentro un paragrafo o una
+  voce di elenco, scrivili su una sola riga.
 - Lingua: italiano. Niente emoji.
 - Testo conciso e comprensibile a chi non ha seguito la conversazione:
   niente riferimenti a "come detto sopra" o alla sessione.
