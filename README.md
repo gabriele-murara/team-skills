@@ -6,6 +6,7 @@ Marketplace di plugin per Claude Code con le skill condivise tra i progetti.
 |---|---|---|
 | `laravel` | `laravel-setup` | Setup di un progetto Laravel 11/12: `CLAUDE.md`, costanti, Logger, classi helper. Sui progetti legacy (Laravel < 11) scrive solo le regole in `CLAUDE.md` |
 | `django` | `django-setup` | Setup di un progetto Django 4.2/5.x/6.x: `CLAUDE.md` (con la struttura a package, una classe per modulo), app `core` con versione in `.version`, Logger, classi helper. Sui progetti legacy (Django < 4.2) scrive solo le regole in `CLAUDE.md` |
+| `django` | `django-apm` | Aggiunge Elastic APM a un progetto Django: agente `elastic-apm` 6.x configurato da variabili d'ambiente e spento di default, tracciamento facoltativo dei processi senza HTTP, comando `check_apm`, test e guida `APM_CONFIGURATION.md` |
 | `issues` | `write-issue` | Scrive il testo di una issue in `issues/`, da copiare nel gestionale |
 | `issues` | `download-issue <n>` | Scarica la issue dal gestionale in `issues/issue-<n>.md` |
 | `issues` | `open-issue <n>` | Da `develop`/`develop-*`: crea e pubblica `issue-<n>`, legge la issue e propone una soluzione |

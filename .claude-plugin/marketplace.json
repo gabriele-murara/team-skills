@@ -16,8 +16,8 @@
     {
       "name": "django",
       "source": "./plugins/django",
-      "description": "Setup di un progetto Django con regole di codifica, costanti, Logger e classi helper.",
-      "version": "1.0.3"
+      "description": "Setup di un progetto Django con regole di codifica, costanti, Logger e classi helper; installazione di Elastic APM.",
+      "version": "1.1.0"
     },
     {
       "name": "issues",

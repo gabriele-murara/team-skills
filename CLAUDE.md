@@ -32,6 +32,9 @@ Plugin attuali:
   (sezione 7 di `SKILL.md`) e non tocca altro. Python sempre >= 3.9. Anche qui
   `DJANGO_CODING_RULES.md`, `core/`, `logger/` e `helpers/` sono modelli
   per il progetto di destinazione.
+  Skill `django-apm`: aggiunge Elastic APM a un progetto Django
+  esistente; anche i suoi file (`settings/`, `utils/`, `commands/`,
+  `tests/`, `doc/`) sono modelli per il progetto di destinazione.
 
 ## Regole per le modifiche
 
@@ -66,7 +69,7 @@ gestionale).
 ## Convenzioni delle skill
 
 - **Lingua**: le skill del plugin `issues` e il `README.md` sono in italiano;
-  le skill `laravel-setup` e `django-setup` e i loro file di riferimento
+  le skill `laravel-setup`, `django-setup` e `django-apm` e i loro file di riferimento
   sono in inglese.
   Mantieni la lingua del file che modifichi. Niente emoji.
 - **Frontmatter**: `name` (uguale al nome della cartella), `description`
@@ -159,7 +162,13 @@ gestionale).
   cambi una regola
   che non dipende dal framework (metodo di lavoro, git, migrazioni), valuta
   se va cambiata anche nell'altra.
+- `django-apm` segue le regole del `CLAUDE.md` del progetto e, con la
+  struttura a package di `django-setup`, mette `ApmTracedProgram` in
+  `<prefix>_utils` e i test in `<prefix>_tests`. I due `check_apm`
+  (con e senza `django-rich`) devono stampare gli stessi messaggi di
+  stato, verificati dallo stesso `tests/test_check_apm.py`.
 - I file Python seguono le regole che impongono ai progetti: 80 colonne,
   `str.format()`. Prima di pubblicarli provali su un progetto Django di
   prova fuori dal repository (`startproject`, `startapp core`, copia dei
-  file, `check`, Logger, auditlog, `BulkInsert`).
+  file, `check`, Logger, auditlog, `BulkInsert`; per `django-apm`
+  `check` con APM spento e acceso, test dei modelli e `check_apm`).
